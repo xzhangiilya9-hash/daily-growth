@@ -37,13 +37,22 @@ IMPORTANT: "takeaways" must contain 4-6 items. Each "sentence" must be a FULL pr
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ parts: [{ text: `${prompt}\n\nGenerate a fresh article for ${todayStr}. Pick a practical, relatable topic relevant to a working professional.` }] }],
-          generationConfig: { temperature: 0.9 },
+          generationConfig: { temperature: 0.9, maxOutputTokens: 2048 },
         }),
       }
     );
 
     const data = await res.json();
+    console.log("Gemini response status:", res.status);
+    console.log("Gemini data:", JSON.stringify(data).slice(0, 500));
+
+    if (data.error) {
+      throw new Error(`Gemini API error: ${data.error.message}`);
+    }
+
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    if (!text) throw new Error("Empty response from Gemini");
+
     const cleaned = text.replace(/```json|```/g, "").trim();
     const article = JSON.parse(cleaned);
 
